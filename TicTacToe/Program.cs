@@ -168,8 +168,14 @@ public static class Bot
     {
         foreach (var x2 in 0..StateTable.NLow)
             foreach (var y2 in 0..StateTable.NLow)
-                if (table[x2, y2] is State.Empty && NotLoseIfWeMakeThisMove(table, x2, y2))
+                if (table[x2, y2] is State.Empty && WinIfMakeThisMove(table, x2, y2, State.O))
                     return (x2, y2);
+
+        foreach (var x2 in 0..StateTable.NLow)
+            foreach (var y2 in 0..StateTable.NLow)
+                if (table[x2, y2] is State.Empty && NotLoseIfMakeThisMove(table, x2, y2, State.O))
+                    return (x2, y2);
+
         return (-1, -1);
     }
 
@@ -209,57 +215,55 @@ public static class Bot
         return false;
     }
 
-
-    private static Dictionary<(StateTable Table, int X, int Y), bool> cache1 = new();
-    private static bool NotLoseIfWeMakeThisMove(StateTable table, int x, int y)
-    {
-        var key = (table, x, y);
-        if (cache1.TryGetValue(key, out var res))
-            return res;
-
-        var newTable = table.WithMove(x, y, State.O);
-        if (ThisStateWon(newTable, State.O))
+    private static State NextTurn(State current)
+        => current switch
         {
-            cache1[key] = true;
+            State.X => State.O,
+            State.O => State.X,
+            _ => throw new()
+        };
+
+    private static bool NotLoseIfMakeThisMove(StateTable table, int x, int y, State player)
+    => Memoized<(StateTable, int, int, State), bool>.Get((table, x, y, player), 1, static arg =>
+    {
+        var (table, x, y, player) = arg;
+        var newTable = table.WithMove(x, y, player);
+        if (ThisStateWon(newTable, player) || newTable.IsFull)
             return true;
-        }
         foreach (var x2 in 0..StateTable.NLow)
             foreach (var y2 in 0..StateTable.NLow)
-                if (newTable[x2, y2] is State.Empty && WinIfTheyMakeThisMove(newTable, x2, y2))
-                {
-                    cache1[key] = false;
+                if (newTable[x2, y2] is State.Empty && WinIfMakeThisMove(newTable, x2, y2, NextTurn(player)))
                     return false;
-                }
-        cache1[key] = true;
         return true;
-    }
+    });
 
-    private static Dictionary<(StateTable Table, int X, int Y), bool> cache2 = new();
-    private static bool WinIfTheyMakeThisMove(StateTable table, int x, int y)
+
+    private static bool WinIfMakeThisMove(StateTable table, int x, int y, State player)
+    => Memoized<(StateTable, int, int, State), bool>.Get((table, x, y, player), 0, static arg =>
     {
-        var key = (table, x, y);
-        if (cache2.TryGetValue(key, out var res))
-            return res;
-
-        var newTable = table.WithMove(x, y, State.X);
-        if (ThisStateWon(newTable, State.X))
-        {
-            cache2[key] = true;
+        var (table, x, y, player) = arg;
+        var newTable = table.WithMove(x, y, player);
+        if (ThisStateWon(newTable, player))
             return true;
-        }
         if (newTable.IsFull)
-        {
-            cache2[key] = false;
             return false;
-        }
         foreach (var x2 in 0..StateTable.NLow)
             foreach (var y2 in 0..StateTable.NLow)
-                if (newTable[x2, y2] is State.Empty && NotLoseIfWeMakeThisMove(newTable, x2, y2))
-                {
-                    cache2[key] = false;
+                if (newTable[x2, y2] is State.Empty && NotLoseIfMakeThisMove(newTable, x2, y2, NextTurn(player)))
                     return false;
-                }
-        cache2[key] = true;
         return true;
+    });
+
+    private static class Memoized<TIn, TOut>
+    {
+        private readonly static Dictionary<(TIn, int MethodTag), TOut> cache = new();
+        public static TOut Get(TIn arg, int methodTag, Func<TIn, TOut> factory)
+        {
+            if (cache.TryGetValue((arg, methodTag), out var res))
+                return res;
+            res = factory(arg);
+            cache[(arg, methodTag)] = res;
+            return res;
+        }
     }
 }
