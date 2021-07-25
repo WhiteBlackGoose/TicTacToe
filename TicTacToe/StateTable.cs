@@ -15,6 +15,8 @@ public unsafe struct StateTable : IEquatable<StateTable>
     public const int NLow = N - 1;
     public const int N2Low = N2 - 1;
 
+    public const int WinRow = 4;
+
     private fixed byte states[N * N];
 
     public override int GetHashCode()
@@ -67,37 +69,33 @@ public unsafe struct StateTable : IEquatable<StateTable>
 
     public bool Won(State state)
     {
-        var count = 0;
-        foreach (var x in 0..NLow)
+        ReadOnlySpan<(int StepX, int StepY, Range XRange, Range YRange)> steps = new[] {
+            (StepX: 1, StepY: 0, XRange: 0..(N - WinRow), YRange: 0..NLow),
+            (StepX: 0, StepY: 1, XRange: 0..NLow, YRange: 0..(N - WinRow)),
+            (StepX: 1, StepY: 1, XRange: 0..(N - WinRow), YRange: 0..(N - WinRow)),
+            (StepX: 1, StepY: -1, XRange: 0..(N - WinRow), YRange: (WinRow)..NLow),
+        };
+
+        foreach (var (stepX, stepY, xRange, yRange) in steps)
         {
-            count = 0;
-            foreach (var y in 0..NLow)
-                count += this[x, y] == state ? 1 : 0;
-            if (count is N)
-                return true;
+            foreach (var x in xRange)
+                foreach (var y in yRange)
+                    if (IsBeginOfWinRow(x, y, stepX, stepY, this, state))
+                        return true;
         }
-
-        foreach (var x in 0..NLow)
-        {
-            count = 0;
-            foreach (var y in 0..NLow)
-                count += this[y, x] == state ? 1 : 0;
-            if (count is N)
-                return true;
-        }
-
-        count = 0;
-        foreach (var i in 0..NLow)
-            count += this[i, i] == state ? 1 : 0;
-        if (count is N)
-            return true;
-
-        count = 0;
-        foreach (var i in 0..NLow)
-            count += this[i, NLow - i] == state ? 1 : 0;
-        if (count is N)
-            return true;
 
         return false;
+
+        static bool IsBeginOfWinRow(int x, int y, int stepX, int stepY, in StateTable table, State state)
+        {
+            for (int i = 0; i < WinRow; i++)
+            {
+                if (table[x, y] != state)
+                    return false;
+                x += stepX;
+                y += stepY;
+            }
+            return true;
+        }
     }
 }
