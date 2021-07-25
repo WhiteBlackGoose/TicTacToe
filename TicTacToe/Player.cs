@@ -1,5 +1,7 @@
 ﻿
 
+using System;
+
 public abstract class Player
 {
     public State Token { get; }
@@ -27,4 +29,20 @@ public sealed class BotPlayer : Player
         => Bot.MakeMove(table, Token);
 
     public override string ToString() => $"Bot {Token}";
+}
+
+public sealed class RandomPlayer : Player
+{
+    private readonly Random random = new();
+    public RandomPlayer(State state) : base(state) { }
+
+    public override (int X, int Y) NextMove(StateTable table)
+    {
+        var (x, y) = (0, 0);
+        while (table[x, y] is not State.Empty)
+            (x, y) = (random.Next(0, StateTable.N), random.Next(0, StateTable.N));
+        return (x, y);
+    }
+
+    public override string ToString() => $"Random {Token}";
 }
