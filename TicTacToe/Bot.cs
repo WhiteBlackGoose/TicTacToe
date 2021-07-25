@@ -4,16 +4,16 @@ using System;
 
 public static class Bot
 {
-    public static (int X, int Y) MakeMove(StateTable table)
+    public static (int X, int Y) MakeMove(StateTable table, State state)
     {
         foreach (var x2 in 0..StateTable.NLow)
             foreach (var y2 in 0..StateTable.NLow)
-                if (table[x2, y2] is State.Empty && WinIfMakeThisMove(table, x2, y2, State.O))
+                if (table[x2, y2] is State.Empty && WinIfMakeThisMove(table, x2, y2, state))
                     return (x2, y2);
 
         foreach (var x2 in 0..StateTable.NLow)
             foreach (var y2 in 0..StateTable.NLow)
-                if (table[x2, y2] is State.Empty && NotLoseIfMakeThisMove(table, x2, y2, State.O))
+                if (table[x2, y2] is State.Empty && NotLoseIfMakeThisMove(table, x2, y2, state))
                     return (x2, y2);
 
         return (-1, -1);
