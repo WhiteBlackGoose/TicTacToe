@@ -73,7 +73,7 @@ public unsafe struct StateTable : IEquatable<StateTable>
             (StepX: 1, StepY: 0, XRange: 0..(N - WinRow), YRange: 0..NLow),
             (StepX: 0, StepY: 1, XRange: 0..NLow, YRange: 0..(N - WinRow)),
             (StepX: 1, StepY: 1, XRange: 0..(N - WinRow), YRange: 0..(N - WinRow)),
-            (StepX: 1, StepY: -1, XRange: 0..(N - WinRow), YRange: (WinRow)..NLow),
+            (StepX: 1, StepY: -1, XRange: 0..(N - WinRow), YRange: WinRow..NLow),
         };
 
         foreach (var (stepX, stepY, xRange, yRange) in steps)
