@@ -19,14 +19,15 @@ let paint (view : NetViewState) tableGetter showCursor =
         else
             match tableGetter x y with
             | X -> "X"
-            | O -> "Y"
+            | O -> "O"
             | _ -> " "
 
     Console.Clear ()
     for x in 0..NLow do
         printf "|"
         for y in 0..NLow do
-            printf $"|{read x y}"
+            printf $"{read x y}|"
+        printf "\n"
 
 
 let rec getUserMoveInteractive (view : NetViewState) (table : StateTable) =
@@ -37,7 +38,7 @@ let rec getUserMoveInteractive (view : NetViewState) (table : StateTable) =
             | rest -> rest
         { X = limitAxis x; Y = limitAxis y }
 
-    paint view (fun x y -> table.States.[x, y]) false
+    paint view (fun x y -> table.States.[x, y]) true
 
     let cx, cy = view.Position.X, view.Position.Y
 
