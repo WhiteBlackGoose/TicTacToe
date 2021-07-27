@@ -6,9 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Memoization.fs" />
     <Compile Include="TableSize.fs" />
     <Compile Include="StateTable.fs" />
     <Compile Include="View.fs" />
+    <Compile Include="Bot.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

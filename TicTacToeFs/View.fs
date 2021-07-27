@@ -2,6 +2,7 @@
 
 open System
 open TableSize
+open States
 
 [<Struct>]
 type Position =
@@ -17,18 +18,40 @@ let paint (view : NetViewState) tableGetter showCursor =
             "@"
         else
             match tableGetter x y with
-            | State.X -> "X"
-            | State.O -> "Y"
+            | X -> "X"
+            | O -> "Y"
             | _ -> " "
 
     Console.Clear ()
     for x in 0..NLow do
         printf "|"
         for y in 0..NLow do
-            printf $"|{read(x, y)}"
+            printf $"|{read x y}"
 
 
-let rec getUserMoveInteractive view table =
-    let readKey = Console.ReadKey ().Key
-    if readKey is ConsoleKey.DownArrow then
-        paint view table
+let rec getUserMoveInteractive (view : NetViewState) table =
+    let limitPosition (x : int, y : int) =
+        let limitAxis = function
+            | tooLow when tooLow < 0 -> 0
+            | tooHigh when tooHigh > NLow -> NLow
+            | rest -> rest
+        { X = limitAxis x; Y = limitAxis y }
+
+    let cx, cy = view.Position.X, view.Position.Y
+
+    let key = (Console.ReadKey ()).Key
+
+    let potentiallyNewPos = 
+        match key with
+        | ConsoleKey.DownArrow -> Some(cx + 1, cy)
+        | ConsoleKey.UpArrow -> Some(cx - 1, cy)
+        | ConsoleKey.RightArrow -> Some(cx, cy + 1)
+        | ConsoleKey.LeftArrow -> Some(cx, cy - 1)
+        | _ -> None
+
+    match potentiallyNewPos with
+    | Some(x, y) -> getUserMoveInteractive { Position = limitPosition (x, y) } table
+    | None -> 
+        match key with
+        | ConsoleKey.Spacebar | ConsoleKey.Enter -> (cx, cy)
+        | _ -> getUserMoveInteractive view table

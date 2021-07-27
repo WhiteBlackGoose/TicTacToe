@@ -5,6 +5,11 @@ open TableSize
 [<Struct>]
 type State = Empty | X | O
 
+let nextTurn = function
+    | X -> O
+    | O -> X
+    | _ -> raise (System.Exception ())
+
 [<Struct>]
 type StateTable = { States : State[,]; }
 
@@ -46,3 +51,5 @@ let won (table : StateTable) state =
         (fun step -> thisShapedWinRowExists step.StepX step.StepY step.RangeX step.RangeY)
 
 
+let isFull (table : StateTable) =
+    Seq.forall (fun c -> c <> Empty) (Seq.map (fun (x, y) -> table.States.[x, y]) AllMoves)
