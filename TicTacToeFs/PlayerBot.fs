@@ -1,4 +1,4 @@
-﻿module Bot
+﻿module PlayerBot
 
 open TableSize
 open States
@@ -35,7 +35,7 @@ and winIfMakeThisMove (table : StateTable) (x : int) (y : int) (token : State) =
     )
 
 
-let botNextMove (table : StateTable) token =
+let botNextMove token (table : StateTable) =
     let moveLeadToSelector strategy (x, y) =
         if table.States.[x, y] = token && strategy table x y token then
             Some(x, y)
@@ -43,5 +43,10 @@ let botNextMove (table : StateTable) token =
             None
 
     match Seq.tryPick (moveLeadToSelector winIfMakeThisMove) AllMoves with
-    | Some(x, y) -> Some(x, y)
-    | None -> Seq.tryPick (moveLeadToSelector notLoseIfMakeThisMove) AllMoves
+    | Some(x, y) -> Some(stateTableWith table x y token)
+    | None ->
+        Option.map
+            (fun (x, y) -> stateTableWith table x y token)
+            (Seq.tryPick (moveLeadToSelector notLoseIfMakeThisMove) AllMoves)
+
+

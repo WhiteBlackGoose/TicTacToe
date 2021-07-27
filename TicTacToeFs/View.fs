@@ -29,13 +29,15 @@ let paint (view : NetViewState) tableGetter showCursor =
             printf $"|{read x y}"
 
 
-let rec getUserMoveInteractive (view : NetViewState) table =
+let rec getUserMoveInteractive (view : NetViewState) (table : StateTable) =
     let limitPosition (x : int, y : int) =
         let limitAxis = function
             | tooLow when tooLow < 0 -> 0
             | tooHigh when tooHigh > NLow -> NLow
             | rest -> rest
         { X = limitAxis x; Y = limitAxis y }
+
+    paint view (fun x y -> table.States.[x, y]) false
 
     let cx, cy = view.Position.X, view.Position.Y
 

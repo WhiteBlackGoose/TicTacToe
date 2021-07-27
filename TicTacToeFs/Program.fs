@@ -1,13 +1,24 @@
-﻿// Learn more about F# at http://docs.microsoft.com/dotnet/fsharp
+﻿open View
+open PlayerUser
+open PlayerBot
+open States
 
-open System
+let view = { Position = { X = 0; Y = 0; } }
+let board = emptyStateTable
 
-// Define a function to construct a message to print
-let from whom =
-    sprintf "from %s" whom
+let rec nextMove nextMove1 nextMove2 (board : StateTable) =
+    paint view (fun x y -> board.States.[x, y]) true
+    match nextMove1 board with
+    | Some newBoard ->
+        if won newBoard X then
+            printf "X won!"
+        else if won newBoard O then
+            printf "O won!"
+        else if isFull newBoard then
+            printf "Draw."
+        else
+            nextMove nextMove2 nextMove1 board
+    | None ->
+        printf "Can't make a move"
 
-[<EntryPoint>]
-let main argv =
-    let message = from "F#" // Call the function
-    printfn "Hello world %s" message
-    0 // return an integer exit code
+nextMove (userNextMove view X) (botNextMove O) board
