@@ -5,23 +5,21 @@ open States
 open Memoization
 
 
-let rec notLoseIfMakeThisMove (table : StateTable) (x : int) (y : int) (token : State) =
-    (table, x, y, token) |> memoize (fun (table, x, y, token) ->
-        let newTable = stateTableWith table x y token
+let rec notLoseIfMakeThisMove = memoize (fun (table, x, y, token) ->
+    let newTable = stateTableWith table x y token
 
-        won newTable token
-        || isFull newTable
-        || (AllMoves
-            |> Seq.exists (fun (x, y) ->
-                newTable.States.[x, y] = Empty
-                && winIfMakeThisMove newTable x y (nextTurn token)
-            )
-            |> not)
+    won newTable token
+    || isFull newTable
+    || (AllMoves
+        |> Seq.exists (fun (x, y) ->
+            newTable.States.[x, y] = Empty
+            && winIfMakeThisMove (newTable, x, y, nextTurn token)
+        )
+        |> not)
     )
 
 
-and winIfMakeThisMove (table : StateTable) (x : int) (y : int) (token : State) =
-    (table, x, y, token) |> memoize (fun (table, x, y, token) ->
+and winIfMakeThisMove = memoize (fun (table, x, y, token) ->
         let newTable = stateTableWith table x y token
 
         won newTable token
@@ -29,7 +27,7 @@ and winIfMakeThisMove (table : StateTable) (x : int) (y : int) (token : State) =
             && (AllMoves
             |> Seq.exists (fun (x, y) ->
                 newTable.States.[x, y] = Empty
-                && notLoseIfMakeThisMove newTable x y (nextTurn token)
+                && notLoseIfMakeThisMove (newTable, x, y, nextTurn token)
             )
             |> not))
     )
@@ -37,7 +35,7 @@ and winIfMakeThisMove (table : StateTable) (x : int) (y : int) (token : State) =
 
 let botNextMove token (table : StateTable) =
     let moveLeadToSelector strategy (x, y) =
-        if table.States.[x, y] = Empty && strategy table x y token then
+        if table.States.[x, y] = Empty && strategy (table, x, y, token) then
             Some(x, y)
         else
             None
